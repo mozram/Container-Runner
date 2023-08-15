@@ -1,4 +1,4 @@
-#! /usr/sbin/bash
+#! /usr/bin/bash
 
 ## Clean version of runner. Home folder will be simulated as empty workspace
 
@@ -22,7 +22,7 @@ TAG_LIST=()
 echo "Select which image to run with (enter number):"
 
 ## Get the list of images
-IMAGES_RAW=$((podman images) 2>&1 )
+IMAGES_RAW=$((docker images) 2>&1 )
 
 ## Split each line into single
 readarray -t <<<$IMAGES_RAW
@@ -49,7 +49,7 @@ read SELECTED_IMAGE
 ## Get args
 ARGS="PYTHONUNBUFFERED=1 $@"
 
-CMD="podman run --rm  --device /dev/bus/usb --entrypoint \"/bin/bash\" ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} -c \"cd ${CURRENT_DIR};$ARGS\""
+CMD="docker run --rm  --device /dev/bus/usb --entrypoint \"/bin/bash\" ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} -c \"cd ${CURRENT_DIR};$ARGS\""
 
 echo "Running ${CMD}"
 
