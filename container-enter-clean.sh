@@ -14,6 +14,10 @@ MOUNT_HOME="--mount type=bind,source=${TEMP_DIR},target=${HOME}"
 MOUNT_WORKSPACE="--mount type=bind,source=${CURRENT_DIR},target=${CURRENT_DIR}"
 ## Mount .ssh as container typically run as root
 MOUNT_SSH="--mount type=bind,source=${HOME}/.ssh,target=/root/.ssh"
+## Mount GPG keyring
+MOUNT_GPG="--mount type=bind,source=${HOME}/.gnupg,target=/root/.gnupg"
+## Mount SSH Sock Agent
+MOUNT_SSH_SOCK="-v $(readlink -f $SSH_AUTH_SOCK):/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent"
 
 ## Variable to store images name
 IMAGES_LIST=()
@@ -45,7 +49,7 @@ read SELECTED_IMAGE
 # echo ${IMAGES_LIST[$SELECTED_IMAGE]}
 # echo ${TAG_LIST[$SELECTED_IMAGE]}
 
-CMD="docker run --rm -it -p 9999:9999 --device /dev/bus/usb --entrypoint \"/bin/bash\" ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} -c \"cd ${CURRENT_DIR} && bash\""
+CMD="docker run --rm -it -p 9999:9999 --device /dev/bus/usb --entrypoint \"/bin/bash\" ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} -c \"cd ${CURRENT_DIR} && bash\""
 echo ${CMD}
 
 eval $CMD
