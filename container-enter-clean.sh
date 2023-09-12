@@ -49,7 +49,7 @@ read SELECTED_IMAGE
 # echo ${IMAGES_LIST[$SELECTED_IMAGE]}
 # echo ${TAG_LIST[$SELECTED_IMAGE]}
 
-CMD="docker run --rm -it -p 9999:9999 --device /dev/bus/usb --entrypoint \"/bin/bash\" ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} -c \"cd ${CURRENT_DIR} && bash\""
+CMD="docker run --rm -it -p 9999:9999 --device /dev/bus/usb --entrypoint \"/bin/bash\" ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} -c \"source /entrypoint.sh;cd ${CURRENT_DIR} && bash\""
 echo ${CMD}
 
 eval $CMD

@@ -44,7 +44,7 @@ read SELECTED_IMAGE
 ARGS="PYTHONUNBUFFERED=1 $@"
 CURRENT_DIR=$(pwd)
 
-CMD="docker run --rm  --device /dev/bus/usb --entrypoint \"/bin/bash\" ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} -c \"cd ${CURRENT_DIR};$ARGS\""
+CMD="docker run --rm  --device /dev/bus/usb --entrypoint \"/bin/bash\" ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} -c \"source /entrypoint.sh;cd ${CURRENT_DIR};$ARGS\""
 
 echo "Running ${CMD}"
 
