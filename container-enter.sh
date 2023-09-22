@@ -4,10 +4,19 @@
 MOUNT_HOME="--mount type=bind,source=${HOME},target=${HOME}"
 ## Mount .ssh as container typically run as root
 MOUNT_SSH="--mount type=bind,source=${HOME}/.ssh,target=/root/.ssh"
-## Mount GPG keyring
-MOUNT_GPG="--mount type=bind,source=${HOME}/.gnupg,target=/root/.gnupg"
+## Mount GPG keyring, if any
+MOUNT_GPG=""
+if [ -d "${HOME}/.gnupg" ] 
+then
+    MOUNT_GPG="--mount type=bind,source=${HOME}/.gnupg,target=/root/.gnupg"
+fi
 ## Mount SSH Sock Agent
-MOUNT_SSH_SOCK="-v $(readlink -f $SSH_AUTH_SOCK):/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent"
+MOUNT_SSH_SOCK=""
+readlink -f $SSH_AUTH_SOCK
+if [ $? -eq 0 ]
+then
+    MOUNT_SSH_SOCK="-v $(readlink -f $SSH_AUTH_SOCK):/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent"
+fi
 
 ## Variable to store images name
 IMAGES_LIST=()
