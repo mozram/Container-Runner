@@ -1,9 +1,9 @@
 #! /usr/bin/bash
 
 ## Clean version of runner. Home folder will be simulated as empty workspace
-
+PROJECT_DIR=$(git rev-parse --show-toplevel)
 CURRENT_DIR=$(pwd)
-TEMP_DIR=${HOME}/.cache/container${CURRENT_DIR}
+TEMP_DIR=${HOME}/.cache/container${PROJECT_DIR}
 
 ## Create temp dir
 mkdir -p ${TEMP_DIR}
@@ -11,7 +11,7 @@ mkdir -p ${TEMP_DIR}
 ## Mount home with new namespace
 MOUNT_HOME="--mount type=bind,source=${TEMP_DIR},target=${HOME}"
 ## Mount home. Map 1-1 so the log directly reflect the path
-MOUNT_WORKSPACE="--mount type=bind,source=${CURRENT_DIR},target=${CURRENT_DIR}"
+MOUNT_WORKSPACE="--mount type=bind,source=${PROJECT_DIR},target=${PROJECT_DIR}"
 ## Mount .ssh as container typically run as root
 MOUNT_SSH="--mount type=bind,source=${HOME}/.ssh,target=/root/.ssh"
 ## Mount GPG keyring, if any
@@ -58,7 +58,8 @@ read SELECTED_IMAGE
 # echo ${IMAGES_LIST[$SELECTED_IMAGE]}
 # echo ${TAG_LIST[$SELECTED_IMAGE]}
 
-CMD="docker run --rm -it -p 9999:9999 --device /dev/bus/usb --entrypoint \"/bin/bash\" ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} -c \"source /entrypoint.sh;cd ${CURRENT_DIR} && bash\""
+CMD="docker run --rm -it -p 9999:9999 --device /dev/bus/usb --workdir=${CURRENT_DIR} ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \"bash\""
+
 echo ${CMD}
 
 eval $CMD

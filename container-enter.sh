@@ -51,6 +51,6 @@ read SELECTED_IMAGE
 ## Get args
 CURRENT_DIR=$(pwd)
 
-CMD="docker run --rm -it --device /dev/bus/usb --entrypoint \"/bin/bash\" ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} -c \"source /entrypoint.sh;cd ${CURRENT_DIR} && bash\""
+CMD="docker run --rm -it --device /dev/bus/usb --workdir=${CURRENT_DIR} ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \"bash\""
 
 eval $CMD
