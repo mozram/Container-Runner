@@ -53,7 +53,7 @@ read SELECTED_IMAGE
 ARGS="PYTHONUNBUFFERED=1 $@"
 CURRENT_DIR=$(pwd)
 
-CMD="docker run --rm --device /dev/bus/usb --workdir=${CURRENT_DIR} ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \"${@}\""
+CMD="docker run --rm --device /dev/bus/usb --workdir=${CURRENT_DIR} -e PYTHONUNBUFFERED=1 ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \"${@}\""
 
 echo "Running ${CMD}"
 
@@ -63,6 +63,7 @@ docker run \
 --rm \
 --device /dev/bus/usb \
 --workdir=${CURRENT_DIR} \
+-e PYTHONUNBUFFERED=1 \
 ${MOUNT_SSH_SOCK} \
 ${MOUNT_GPG} \
 ${MOUNT_HOME} \

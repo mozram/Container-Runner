@@ -58,7 +58,7 @@ read SELECTED_IMAGE
 # echo ${IMAGES_LIST[$SELECTED_IMAGE]}
 # echo ${TAG_LIST[$SELECTED_IMAGE]}
 
-CMD="docker run --rm -it -p 9999:9999 --device /dev/bus/usb --workdir=${CURRENT_DIR} ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \"bash\""
+CMD="docker run --rm -it -p 9999:9999 --device /dev/bus/usb --workdir=${CURRENT_DIR} -e PYTHONUNBUFFERED=1 ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \"bash\""
 
 echo ${CMD}
 
