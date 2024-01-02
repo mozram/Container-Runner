@@ -1,5 +1,12 @@
 #! /usr/bin/bash
 
+## Macro for stdout color
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+LCYAN='\033[1;36m'
+BRED='\033[1;91m'
+NC='\033[0m' # No Color
+
 ## Mount home. Map 1-1 so the log directly reflect the path
 MOUNT_HOME="--mount type=bind,source=${HOME},target=${HOME}"
 ## Mount .ssh as container typically run as root
@@ -38,7 +45,7 @@ do
     IMAGES_LIST+=("${TEMP}")
     TAG_LIST+=("${TEMP2}")
     ## Print selection to user
-    echo "$i: ${TEMP}:${TEMP2}"
+    echo -e "$i: ${LCYAN}${TEMP}${NC}:${BRED}${TEMP2}${NC}"
 done
 
 read SELECTED_IMAGE
