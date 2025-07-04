@@ -25,6 +25,10 @@ then
     MOUNT_SSH_SOCK="-v $(readlink -f $SSH_AUTH_SOCK):/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent"
 fi
 
+## Mount current directory with same path as host
+CURRENT_DIR=$(pwd)
+MOUNT_CURRENT_DIR="--mount type=bind,source=${CURRENT_DIR},target=${CURRENT_DIR}"
+
 ## Variable to store images name
 IMAGES_LIST=()
 TAG_LIST=()
@@ -58,9 +62,8 @@ read SELECTED_IMAGE
 
 ## Get args
 ARGS="PYTHONUNBUFFERED=1 $@"
-CURRENT_DIR=$(pwd)
 
-CMD="docker run --rm --device /dev/bus/usb --workdir=${CURRENT_DIR} -e PYTHONUNBUFFERED=1 ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \"${@}\""
+CMD="docker run --rm --device /dev/bus/usb --workdir=${CURRENT_DIR} -e PYTHONUNBUFFERED=1 ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_SSH} ${MOUNT_CURRENT_DIR} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \"${@}\""
 
 echo "Running ${CMD}"
 
@@ -74,7 +77,7 @@ docker run \
 ${MOUNT_SSH_SOCK} \
 ${MOUNT_GPG} \
 ${MOUNT_HOME} \
-${MOUNT_WORKSPACE} \
+${MOUNT_CURRENT_DIR} \
 ${MOUNT_SSH} \
 ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \
 "${@}"
