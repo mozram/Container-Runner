@@ -13,77 +13,49 @@ CURRENT_DIR=$(pwd)
 TEMP_DIR=${HOME}/.cache/container${PROJECT_DIR}
 
 ## Create temp dir
-mkdir -p ${TEMP_DIR}
+mkdir -p -- "${TEMP_DIR}"
 
-## Mount home with new namespace
-MOUNT_HOME="--mount type=bind,source=${TEMP_DIR},target=${HOME}"
-## Mount home. Map 1-1 so the log directly reflect the path
-MOUNT_WORKSPACE="--mount type=bind,source=${PROJECT_DIR},target=${PROJECT_DIR}"
-## Mount .ssh as container typically run as root
-MOUNT_SSH="--mount type=bind,source=${HOME}/.ssh,target=/root/.ssh"
-## Mount GPG keyring, if any
-MOUNT_GPG=""
-if [ -d "${HOME}/.gnupg" ] 
-then
-    MOUNT_GPG="--mount type=bind,source=${HOME}/.gnupg,target=/root/.gnupg"
-fi
-## Mount SSH Sock Agent
-MOUNT_SSH_SOCK=""
-readlink -f $SSH_AUTH_SOCK
-if [ $? -eq 0 ]
-then
-    MOUNT_SSH_SOCK="-v $(readlink -f $SSH_AUTH_SOCK):/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent"
-fi
-
-## Variable to store images name
 IMAGES_LIST=()
-TAG_LIST=()
 
 echo "Select which image to run with (enter number):"
 
-## Get the list of images
-IMAGES_RAW=$((docker images) 2>&1 )
+readarray -t IMAGES_LIST < <(docker image ls --filter dangling=false --format '{{.Repository}}:{{.Tag}}')
+if [ "${#IMAGES_LIST[@]}" -eq 0 ]
+then
+    echo "No tagged Docker images found." >&2
+    exit 1
+fi
 
-## Split each line into single
-readarray -t <<<$IMAGES_RAW
-
-for (( i=1; i<${#MAPFILE[@]}; i++ ))
+for (( i=0; i<${#IMAGES_LIST[@]}; i++ ))
 do
-    # echo "$i: ${MAPFILE[$i]}"
-    TEMP=$(echo "${MAPFILE[$i]}" | tr -s " " | cut -d' ' -f1)
-    TEMP2=$(echo "${MAPFILE[$i]}" | tr -s " " | cut -d' ' -f2)
-    IMAGES_LIST+=("${TEMP}")
-    TAG_LIST+=("${TEMP2}")
-    ## Print selection to user
-    echo -e "$i: ${LCYAN}${TEMP}${NC}:${BRED}${TEMP2}${NC}"
+    echo -e "$((i + 1)): ${LCYAN}${IMAGES_LIST[$i]}${NC}"
 done
 
-read SELECTED_IMAGE
+read -r SELECTED_IMAGE
+if ! [[ "$SELECTED_IMAGE" =~ ^[0-9]+$ ]] || (( SELECTED_IMAGE < 1 || SELECTED_IMAGE > ${#IMAGES_LIST[@]} ))
+then
+    echo "Invalid image selection." >&2
+    exit 1
+fi
 
-((SELECTED_IMAGE=SELECTED_IMAGE-1))
-# echo $SELECTED_IMAGE
+IMAGE=${IMAGES_LIST[$((SELECTED_IMAGE - 1))]}
+DOCKER_ARGS=(run --rm -p 9999:9999 --device /dev/bus/usb "--workdir=${CURRENT_DIR}" -e PYTHONUNBUFFERED=1)
+DOCKER_ARGS+=(--mount "type=bind,source=${TEMP_DIR},target=${HOME}")
+DOCKER_ARGS+=(--mount "type=bind,source=${PROJECT_DIR},target=${PROJECT_DIR}")
+DOCKER_ARGS+=(--mount "type=bind,source=${HOME}/.ssh,target=/root/.ssh")
 
-# echo ${IMAGES_LIST[$SELECTED_IMAGE]}
-# echo ${TAG_LIST[$SELECTED_IMAGE]}
+if [ -d "${HOME}/.gnupg" ]
+then
+    DOCKER_ARGS+=(--mount "type=bind,source=${HOME}/.gnupg,target=/root/.gnupg")
+fi
 
-## Get args
-ARGS="${@}"
+if [ -n "${SSH_AUTH_SOCK:-}" ] && SSH_AUTH_SOCK_PATH=$(readlink -f -- "$SSH_AUTH_SOCK")
+then
+    DOCKER_ARGS+=(-v "${SSH_AUTH_SOCK_PATH}:/ssh-agent" -e SSH_AUTH_SOCK=/ssh-agent)
+fi
 
-CMD="docker run --rm --device /dev/bus/usb --workdir=${CURRENT_DIR} -e PYTHONUNBUFFERED=1 ${MOUNT_SSH_SOCK} ${MOUNT_GPG} ${MOUNT_HOME} ${MOUNT_WORKSPACE} ${MOUNT_SSH} ${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \"$ARGS\""
+printf 'Running:'
+printf ' %q' docker "${DOCKER_ARGS[@]}" "$IMAGE" "$@"
+printf '\n'
 
-echo "Running ${CMD}"
-
-#eval $CMD
-
-docker run \
---rm \
---device /dev/bus/usb \
---workdir=${CURRENT_DIR} \
--e PYTHONUNBUFFERED=1 \
-${MOUNT_SSH_SOCK} \
-${MOUNT_GPG} \
-${MOUNT_HOME} \
-${MOUNT_WORKSPACE} \
-${MOUNT_SSH} \
-${IMAGES_LIST[$SELECTED_IMAGE]}:${TAG_LIST[$SELECTED_IMAGE]} \
-"${@}"
+docker "${DOCKER_ARGS[@]}" "$IMAGE" "$@"
