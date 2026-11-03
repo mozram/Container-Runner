@@ -9,8 +9,15 @@ NC='\033[0m' # No Color
 
 CURRENT_DIR=$(pwd)
 IMAGES_LIST=()
+SELECTED_IMAGE=
 
-echo "Select which image to run with (enter number):"
+if [[ "${1:-}" =~ ^[0-9]+$ ]]
+then
+    SELECTED_IMAGE=$1
+    shift
+else
+    echo "Select which image to run with (enter number):"
+fi
 
 readarray -t IMAGES_LIST < <(docker image ls --filter dangling=false --format '{{.Repository}}:{{.Tag}}')
 if [ "${#IMAGES_LIST[@]}" -eq 0 ]
@@ -24,14 +31,18 @@ do
     echo -e "$((i + 1)): ${LCYAN}${IMAGES_LIST[$i]}${NC}"
 done
 
-read -r SELECTED_IMAGE
-if ! [[ "$SELECTED_IMAGE" =~ ^[0-9]+$ ]] || (( SELECTED_IMAGE < 1 || SELECTED_IMAGE > ${#IMAGES_LIST[@]} ))
+if [ -z "$SELECTED_IMAGE" ]
+then
+    read -r SELECTED_IMAGE
+fi
+
+if ! [[ "$SELECTED_IMAGE" =~ ^[0-9]+$ ]] || (( 10#$SELECTED_IMAGE < 1 || 10#$SELECTED_IMAGE > ${#IMAGES_LIST[@]} ))
 then
     echo "Invalid image selection." >&2
     exit 1
 fi
 
-IMAGE=${IMAGES_LIST[$((SELECTED_IMAGE - 1))]}
+IMAGE=${IMAGES_LIST[$((10#$SELECTED_IMAGE - 1))]}
 DOCKER_ARGS=(run --rm --device /dev/bus/usb "--workdir=${CURRENT_DIR}" -e PYTHONUNBUFFERED=1)
 DOCKER_ARGS+=(--mount "type=bind,source=${HOME},target=${HOME}")
 DOCKER_ARGS+=(--mount "type=bind,source=${HOME}/.ssh,target=/root/.ssh")
